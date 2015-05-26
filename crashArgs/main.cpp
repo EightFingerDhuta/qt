@@ -7,13 +7,16 @@
 
 #include "config.h"
 
+#define FREETYPE
+
 int main(int argc, char *argv[])
 {
+#if defined(FREETYPE)
     char *arg1 = "-platform";
     char *arg2 = "windows:fontengine=freetype";
 
     int argc0 = argc + 2;
-    char *argv0[argc0];
+    char *argv0[argc0 + 1];
 
     for (int i = 0; i < argc; i++) {
         argv0[i] = argv[i];
@@ -21,9 +24,12 @@ int main(int argc, char *argv[])
 
     argv0[argc] = arg1;
     argv0[argc + 1] = arg2;
+    argv0[argc + 2] = NULL;
 
     QGuiApplication app(argc0, argv0);
-//    QGuiApplication app(argc, argv);
+#else
+    QGuiApplication app(argc, argv);
+#endif
     app.addLibraryPath("plugins");
 
     QQuickView *view = new QQuickView;
@@ -74,7 +80,7 @@ int main(int argc, char *argv[])
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    qDebug() << config->GetQML();
+    qDebug() << "QML:" << config->GetQML();
     component.setData(config->GetQML().toStdString().c_str(), QUrl());
     QQuickItem* item = qobject_cast<QQuickItem*>(component.create());
     if (!item) {
@@ -83,10 +89,8 @@ int main(int argc, char *argv[])
     }
     item->setParentItem(view->contentItem());
     view->show();
-    if (view) {
-        QImage img = view->grabWindow();
-        img.save("test.bmp");
-    }
+    QImage img = view->grabWindow();
+    img.save("test.bmp");
     view->hide();
 
     return app.exec();
